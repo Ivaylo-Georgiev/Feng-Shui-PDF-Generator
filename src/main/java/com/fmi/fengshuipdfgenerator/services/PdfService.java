@@ -6,12 +6,14 @@ import java.net.URISyntaxException;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 
 import org.apache.commons.io.FileUtils;
 
 import com.fmi.fengshuipdfgenerator.FengShuiDetails;
+import com.fmi.fengshuipdfgenerator.enums.Gender;
 import com.fmi.fengshuipdfgenerator.pdf.PdfGenerator;
 import com.google.gson.Gson;
 import com.itextpdf.text.DocumentException;
@@ -28,9 +30,11 @@ public class PdfService {
 			+ "	\"fourWorstDirections\": \"WEST,NORTH_EAST,NORTH_WEST,SOUTH_WEST\"\r\n" + "}";
 
 	@GET
-	@Path("/download")
-	public Response downloadPdf() throws IOException, DocumentException, URISyntaxException {
-		PdfGenerator pdfGenerator = new PdfGenerator(new Gson().fromJson(JSON_MOCK, FengShuiDetails.class));
+	@Path("/download/{year}/{hour}/{gender}")
+	public Response downloadPdf(@PathParam("year") int year, @PathParam("hour") int hour,
+			@PathParam("gender") Gender gender) throws IOException, DocumentException, URISyntaxException {
+		FengShuiDetails fengShuiDetails = new Gson().fromJson(JSON_MOCK, FengShuiDetails.class);
+		PdfGenerator pdfGenerator = new PdfGenerator(fengShuiDetails, year, hour, gender);
 		pdfGenerator.generatePdfDocument();
 
 		File file = new File(PDF_NAME);
