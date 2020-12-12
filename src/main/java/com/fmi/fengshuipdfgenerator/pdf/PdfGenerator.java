@@ -8,6 +8,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import com.fmi.fengshuipdfgenerator.FengShuiDetails;
+import com.fmi.fengshuipdfgenerator.enums.AnimalSign;
+import com.fmi.fengshuipdfgenerator.enums.Gender;
 import com.itextpdf.text.BaseColor;
 import com.itextpdf.text.Chunk;
 import com.itextpdf.text.Document;
@@ -23,6 +25,8 @@ public class PdfGenerator {
 
 	private static final String PDF_NAME = "Feng Shui Details.pdf";
 
+	private static final int FIRST_ASTROLOGY_ALLY_INDEX = 0;
+	private static final int SECOND_ASTROLOGY_ALLY_INDEX = 1;
 	private static final int IMAGE_SCALE = 20;
 	private static final int PAGE_BORDER_WIDTH = 10;
 
@@ -32,9 +36,15 @@ public class PdfGenerator {
 	private static final Paragraph EMPTY_PARAGRAPH = new Paragraph(new Chunk(" ", TITLE_FONT));
 
 	private FengShuiDetails fengShuiDetails;
+	private int year;
+	private int hour;
+	private Gender gender;
 
-	public PdfGenerator(FengShuiDetails fengShuiDetails) {
+	public PdfGenerator(FengShuiDetails fengShuiDetails, int year, int hour, Gender gender) {
 		this.fengShuiDetails = fengShuiDetails;
+		this.year = year;
+		this.hour = hour;
+		this.gender = gender;
 	}
 
 	public void generatePdfDocument() throws DocumentException, MalformedURLException, URISyntaxException, IOException {
@@ -44,66 +54,74 @@ public class PdfGenerator {
 		document.open();
 		setPageFrame(document);
 		setTitle(document);
-		setChineseYearSign(document, 1998);
-		setImage(document, "src\\main\\resources\\tiger.png");
-		setChineseHourSign(document, 5);
-		setImage(document, "src\\main\\resources\\rabbit.png");
+		setChineseYearSign(document, year);
+		setChineseHourSign(document, hour);
 		setAstrologyAllies(document);
-		setImage(document, "src\\main\\resources\\horse.png");
-		setImage(document, "src\\main\\\\resources\\dog.png");
 		setSecretFriend(document);
-		setImage(document, "src\\main\\resources\\pig.png");
 		setAstrologyEnemy(document);
-		setImage(document, "src\\main\\resources\\monkey.png");
 		setPeachBlossomAnimal(document);
-		setImage(document, "src\\main\\resources\\rabbit.png");
-		setKuaNumber(document, "MALE");
+		setKuaNumber(document, gender);
 		setFourBestDirections(document);
 		setFourWorstDirections(document);
 		document.close();
 	}
 
-	private void setChineseYearSign(Document document, int year) throws DocumentException {
+	private void setChineseYearSign(Document document, int year)
+			throws DocumentException, MalformedURLException, URISyntaxException, IOException {
 		String keyStr = "Chinese year sign for " + year + ": ";
 		String valueStr = fengShuiDetails.getChineseYearSign();
 		setKeyValuePair(document, keyStr, valueStr);
+		setImage(document, AnimalSign.valueOf(valueStr).getImagePath());
 	}
 
-	private void setChineseHourSign(Document document, int hour) throws DocumentException {
+	private void setChineseHourSign(Document document, int hour)
+			throws DocumentException, MalformedURLException, URISyntaxException, IOException {
 		String keyStr = "Chinese hour sign for " + hour + ": ";
 		String valueStr = fengShuiDetails.getChineseHourSign();
 		setKeyValuePair(document, keyStr, valueStr);
+		setImage(document, AnimalSign.valueOf(valueStr).getImagePath());
 	}
 
-	private void setKuaNumber(Document document, String gender) throws DocumentException {
-		String keyStr = "KUA number for " + gender + ": ";
+	private void setKuaNumber(Document document, Gender gender) throws DocumentException {
+		String keyStr = "KUA number for " + gender.toString() + ": ";
 		String valueStr = String.valueOf(fengShuiDetails.getKuaNumber());
 		setKeyValuePair(document, keyStr, valueStr);
 		document.add(EMPTY_PARAGRAPH);
 	}
 
-	private void setAstrologyAllies(Document document) throws DocumentException {
+	private void setAstrologyAllies(Document document)
+			throws DocumentException, MalformedURLException, URISyntaxException, IOException {
 		String keyStr = "Astrology allies: ";
 		String valueStr = fengShuiDetails.getAstrologyAllies().replace(",", ", ");
 		setKeyValuePair(document, keyStr, valueStr);
+		setImage(document, AnimalSign
+				.valueOf(fengShuiDetails.getAstrologyAllies().split(",")[FIRST_ASTROLOGY_ALLY_INDEX]).getImagePath());
+		setImage(document, AnimalSign
+				.valueOf(fengShuiDetails.getAstrologyAllies().split(",")[SECOND_ASTROLOGY_ALLY_INDEX]).getImagePath());
 	}
 
-	private void setSecretFriend(Document document) throws DocumentException {
+	private void setSecretFriend(Document document)
+			throws DocumentException, MalformedURLException, URISyntaxException, IOException {
 		String keyStr = "Secret friend: ";
 		String valueStr = fengShuiDetails.getSecretFriend();
 		setKeyValuePair(document, keyStr, valueStr);
+		setImage(document, AnimalSign.valueOf(valueStr).getImagePath());
 	}
 
-	private void setAstrologyEnemy(Document document) throws DocumentException {
+	private void setAstrologyEnemy(Document document)
+			throws DocumentException, MalformedURLException, URISyntaxException, IOException {
 		String keyStr = "Astrology enemy: ";
 		String valueStr = fengShuiDetails.getAstrologyEnemy();
 		setKeyValuePair(document, keyStr, valueStr);
+		setImage(document, AnimalSign.valueOf(valueStr).getImagePath());
 	}
 
-	private void setPeachBlossomAnimal(Document document) throws DocumentException {
+	private void setPeachBlossomAnimal(Document document)
+			throws DocumentException, MalformedURLException, URISyntaxException, IOException {
 		String keyStr = "Peach blossom animal: ";
 		String valueStr = fengShuiDetails.getPeachBlossomAnimal();
 		setKeyValuePair(document, keyStr, valueStr);
+		setImage(document, AnimalSign.valueOf(valueStr).getImagePath());
 	}
 
 	private void setFourBestDirections(Document document) throws DocumentException {
