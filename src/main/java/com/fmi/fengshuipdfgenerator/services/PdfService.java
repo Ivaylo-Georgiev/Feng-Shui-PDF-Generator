@@ -3,6 +3,7 @@ package com.fmi.fengshuipdfgenerator.services;
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.nio.file.Files;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -33,19 +34,23 @@ public class PdfService {
 	@Path("/download/{year}/{hour}/{gender}")
 	public Response downloadPdf(@PathParam("year") int year, @PathParam("hour") int hour,
 			@PathParam("gender") Gender gender) throws IOException, DocumentException, URISyntaxException {
-		FengShuiDetails fengShuiDetails = new Gson().fromJson(JSON_MOCK, FengShuiDetails.class);
-		PdfGenerator pdfGenerator = new PdfGenerator(fengShuiDetails, year, hour, gender);
-		pdfGenerator.generatePdfDocument();
+		try {
+			FengShuiDetails fengShuiDetails = new Gson().fromJson(JSON_MOCK, FengShuiDetails.class);
+			PdfGenerator pdfGenerator = new PdfGenerator(fengShuiDetails, year, hour, gender);
+			pdfGenerator.generatePdfDocument();
 
-		File file = new File(PDF_NAME);
-		byte[] pdfBytes = FileUtils.readFileToByteArray(file);
+			File file = new File(PDF_NAME);
+			byte[] pdfBytes = FileUtils.readFileToByteArray(file);
 
-		FileUtils.writeByteArrayToFile(new File(PDF_NAME), pdfBytes);
+			FileUtils.writeByteArrayToFile(new File(PDF_NAME), pdfBytes);
 
-		ResponseBuilder response = Response.status(200).entity((Object) pdfBytes);
-		response.header("Content-Disposition", "attachment; filename=\"" + PDF_NAME + "\"");
+			ResponseBuilder response = Response.status(200).entity((Object) pdfBytes);
+			response.header("Content-Disposition", "attachment; filename=\"" + PDF_NAME + "\"");
 
-		return response.build();
+			return response.build();
+		} finally {
+			Files.deleteIfExists(new File(PDF_NAME).toPath());
+		}
 	}
 
 }
