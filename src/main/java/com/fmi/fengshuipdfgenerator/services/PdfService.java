@@ -3,6 +3,7 @@ package com.fmi.fengshuipdfgenerator.services;
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 
 import javax.ws.rs.GET;
@@ -12,6 +13,11 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
 
 import com.fmi.fengshuipdfgenerator.FengShuiDetails;
 import com.fmi.fengshuipdfgenerator.enums.Gender;
@@ -35,7 +41,14 @@ public class PdfService {
 	public Response downloadPdf(@PathParam("year") int year, @PathParam("hour") int hour,
 			@PathParam("gender") Gender gender) throws IOException, DocumentException, URISyntaxException {
 		try {
-			FengShuiDetails fengShuiDetails = new Gson().fromJson(JSON_MOCK, FengShuiDetails.class);
+			CloseableHttpClient httpclient = HttpClients.createDefault();
+			HttpGet httpGet = new HttpGet("http://localhost:8080/fengShuiDetails/" + year + "/" + hour + "/" + gender);
+			HttpResponse httpResponse = httpclient.execute(httpGet);
+
+			String responseContent = IOUtils.toString(httpResponse.getEntity().getContent(), StandardCharsets.UTF_8);
+
+			System.out.println(responseContent);
+			FengShuiDetails fengShuiDetails = new Gson().fromJson(responseContent, FengShuiDetails.class);
 			PdfGenerator pdfGenerator = new PdfGenerator(fengShuiDetails, year, hour, gender);
 			pdfGenerator.generatePdfDocument();
 
