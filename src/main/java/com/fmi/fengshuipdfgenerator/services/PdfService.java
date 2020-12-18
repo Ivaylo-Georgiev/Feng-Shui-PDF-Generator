@@ -3,8 +3,8 @@ package com.fmi.fengshuipdfgenerator.services;
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.util.concurrent.TimeoutException;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -13,15 +13,12 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
 
-import com.fmi.fengshuipdfgenerator.FengShuiDetails;
 import com.fmi.fengshuipdfgenerator.enums.Gender;
 import com.fmi.fengshuipdfgenerator.pdf.PdfGenerator;
+import com.fmi.fengshuipdfgenerator.pojo.FengShuiDetails;
+import com.fmi.fengshuipdfgenerator.pojo.RPCParameters;
+import com.fmi.fengshuipdfgenerator.rpc.RPCCLientSingleton;
 import com.google.gson.Gson;
 import com.itextpdf.text.DocumentException;
 
@@ -29,26 +26,14 @@ import com.itextpdf.text.DocumentException;
 public class PdfService {
 
 	private static final String PDF_NAME = "Feng Shui Details.pdf";
-	private static final String JSON_MOCK = "{\r\n" + "	\"chineseYearSign\": \"TIGER\",\r\n"
-			+ "	\"chineseHourSign\": \"RABBIT\",\r\n" + "	\"astrologyAllies\": \"HORSE,DOG\",\r\n"
-			+ "	\"secretFriend\": \"PIG\",\r\n" + "	\"astrologyEnemy\": \"MONKEY\",\r\n"
-			+ "	\"peachBlossomAnimal\": \"RABBIT\",\r\n" + "	\"kuaNumber\": 3,\r\n"
-			+ "	\"fourBestDirections\": \"NORTH,EAST,SOUTH,SOUTH_EAST\",\r\n"
-			+ "	\"fourWorstDirections\": \"WEST,NORTH_EAST,NORTH_WEST,SOUTH_WEST\"\r\n" + "}";
 
 	@GET
 	@Path("/download/{year}/{hour}/{gender}")
 	public Response downloadPdf(@PathParam("year") int year, @PathParam("hour") int hour,
-			@PathParam("gender") Gender gender) throws IOException, DocumentException, URISyntaxException {
+			@PathParam("gender") Gender gender)
+			throws IOException, DocumentException, URISyntaxException, InterruptedException, TimeoutException {
 		try {
-			CloseableHttpClient httpclient = HttpClients.createDefault();
-			HttpGet httpGet = new HttpGet("http://localhost:8080/fengShuiDetails/" + year + "/" + hour + "/" + gender);
-			HttpResponse httpResponse = httpclient.execute(httpGet);
-
-			String responseContent = IOUtils.toString(httpResponse.getEntity().getContent(), StandardCharsets.UTF_8);
-
-			System.out.println(responseContent);
-			FengShuiDetails fengShuiDetails = new Gson().fromJson(responseContent, FengShuiDetails.class);
+			FengShuiDetails fengShuiDetails = getFengShuiDetails(year, hour, gender);
 			PdfGenerator pdfGenerator = new PdfGenerator(fengShuiDetails, year, hour, gender);
 			pdfGenerator.generatePdfDocument();
 
@@ -57,13 +42,31 @@ public class PdfService {
 
 			FileUtils.writeByteArrayToFile(new File(PDF_NAME), pdfBytes);
 
-			ResponseBuilder response = Response.status(200).entity((Object) pdfBytes);
+			ResponseBuilder response = Response.status(Response.Status.OK).entity((Object) pdfBytes);
 			response.header("Content-Disposition", "attachment; filename=\"" + PDF_NAME + "\"");
 
 			return response.build();
+		} catch (IOException | TimeoutException | InterruptedException e) {
+			return Response.status(Response.Status.NOT_FOUND)
+					.entity("Could not load feng shui details: remote connection error").build();
 		} finally {
 			Files.deleteIfExists(new File(PDF_NAME).toPath());
 		}
+	}
+
+	private FengShuiDetails getFengShuiDetails(int year, int hour, Gender gender)
+			throws IOException, TimeoutException, InterruptedException {
+		String responseContent = null;
+		RPCCLientSingleton rpcClient = RPCCLientSingleton.getInstance();
+		RPCParameters params = new RPCParameters();
+		params.setYear(year);
+		params.setHour(hour);
+		params.setGender(gender);
+
+		Gson gson = new Gson();
+		responseContent = rpcClient.call(gson.toJson(params));
+
+		return gson.fromJson(responseContent, FengShuiDetails.class);
 	}
 
 }

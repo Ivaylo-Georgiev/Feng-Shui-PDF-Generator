@@ -1,4 +1,4 @@
-package com.fmi.fengshuipdfgenerator;
+package com.fmi.fengshuipdfgenerator.pojo;
 
 public class FengShuiDetails {
 

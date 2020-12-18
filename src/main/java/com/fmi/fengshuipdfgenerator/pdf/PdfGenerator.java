@@ -7,9 +7,9 @@ import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-import com.fmi.fengshuipdfgenerator.FengShuiDetails;
 import com.fmi.fengshuipdfgenerator.enums.AnimalSign;
 import com.fmi.fengshuipdfgenerator.enums.Gender;
+import com.fmi.fengshuipdfgenerator.pojo.FengShuiDetails;
 import com.itextpdf.text.BaseColor;
 import com.itextpdf.text.Chunk;
 import com.itextpdf.text.Document;
