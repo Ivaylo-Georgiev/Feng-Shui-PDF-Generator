@@ -44,6 +44,9 @@ public class PdfService {
 
 			ResponseBuilder response = Response.status(Response.Status.OK).entity((Object) pdfBytes);
 			response.header("Content-Disposition", "attachment; filename=\"" + PDF_NAME + "\"");
+			
+			//allow UI to connect to Pdf Service
+			response.header("Access-Control-Allow-Origin", "http://13.59.137.69:3000");
 
 			return response.build();
 		} catch (IOException | TimeoutException | InterruptedException e) {
