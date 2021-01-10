@@ -25,35 +25,38 @@ import com.itextpdf.text.DocumentException;
 @Path("/pdf")
 public class PdfService {
 
-	private static final String PDF_NAME = "Feng Shui Details.pdf";
-
 	@GET
 	@Path("/download/{year}/{hour}/{gender}")
 	public Response downloadPdf(@PathParam("year") int year, @PathParam("hour") int hour,
 			@PathParam("gender") Gender gender)
 			throws IOException, DocumentException, URISyntaxException, InterruptedException, TimeoutException {
+		File file = null;
 		try {
 			FengShuiDetails fengShuiDetails = getFengShuiDetails(year, hour, gender);
 			PdfGenerator pdfGenerator = new PdfGenerator(fengShuiDetails, year, hour, gender);
-			pdfGenerator.generatePdfDocument();
+			String pdfName = pdfGenerator.generatePdfDocument();
 
-			File file = new File(PDF_NAME);
+			file = new File(pdfName);
 			byte[] pdfBytes = FileUtils.readFileToByteArray(file);
 
-			FileUtils.writeByteArrayToFile(new File(PDF_NAME), pdfBytes);
+			FileUtils.writeByteArrayToFile(new File(pdfName), pdfBytes);
 
 			ResponseBuilder response = Response.status(Response.Status.OK).entity((Object) pdfBytes);
-			response.header("Content-Disposition", "attachment; filename=\"" + PDF_NAME + "\"");
-			
-			//allow UI to connect to Pdf Service
+			response.header("Content-Disposition", "attachment; filename=\"" + pdfName + "\"");
+
+			// allow UI to connect to Pdf Service
 			response.header("Access-Control-Allow-Origin", "http://13.59.137.69:3000");
+
+			Files.deleteIfExists(new File(pdfName).toPath());
 
 			return response.build();
 		} catch (IOException | TimeoutException | InterruptedException e) {
 			return Response.status(Response.Status.NOT_FOUND)
 					.entity("Could not load feng shui details: remote connection error").build();
 		} finally {
-			Files.deleteIfExists(new File(PDF_NAME).toPath());
+			if (file != null) {
+				Files.deleteIfExists(file.toPath());
+			}
 		}
 	}
 

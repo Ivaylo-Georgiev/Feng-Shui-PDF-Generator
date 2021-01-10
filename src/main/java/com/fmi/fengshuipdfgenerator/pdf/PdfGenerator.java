@@ -6,6 +6,7 @@ import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.UUID;
 
 import com.fmi.fengshuipdfgenerator.enums.AnimalSign;
 import com.fmi.fengshuipdfgenerator.enums.Gender;
@@ -23,7 +24,8 @@ import com.itextpdf.text.Rectangle;
 
 public class PdfGenerator {
 
-	private static final String PDF_NAME = "Feng Shui Details.pdf";
+	private static final String PDF_NAME = "Feng Shui Details";
+	private static final String PDF_EXTENSION = ".pdf";
 
 	private static final int FIRST_ASTROLOGY_ALLY_INDEX = 0;
 	private static final int SECOND_ASTROLOGY_ALLY_INDEX = 1;
@@ -47,9 +49,10 @@ public class PdfGenerator {
 		this.gender = gender;
 	}
 
-	public void generatePdfDocument() throws DocumentException, MalformedURLException, URISyntaxException, IOException {
+	public String generatePdfDocument() throws DocumentException, MalformedURLException, URISyntaxException, IOException {
 		Document document = new Document();
-		PdfWriter.getInstance(document, new FileOutputStream(PDF_NAME));
+		String pdfName = PDF_NAME + UUID.randomUUID() + PDF_EXTENSION;
+		PdfWriter.getInstance(document, new FileOutputStream(pdfName));
 
 		document.open();
 		setPageFrame(document);
@@ -64,6 +67,8 @@ public class PdfGenerator {
 		setFourBestDirections(document);
 		setFourWorstDirections(document);
 		document.close();
+
+		return pdfName;
 	}
 
 	private void setChineseYearSign(Document document, int year)
